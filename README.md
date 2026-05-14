@@ -99,6 +99,7 @@ random_users_app/
 │ ├── services.py # Бизнес-логика
 │ └── templates/ # HTML шаблоны
 │ ├── index.html
+│ ├── 404.html
 │ └── user_detail.html
 ├── tests/
 │ ├── conftest.py # Фикстуры 
