@@ -28,9 +28,17 @@
 
 ## Запуск
 
+Клонируйте репозиторий:
 ```bash
 git clone https://github.com/plvbogdan/random_users_app
 cd random_users_app
+```
+Создайте файл `.env`:
+```bash
+echo -e "API_BASE_URL=https://api.randomdatatools.ru\nDATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/random_users" > .env
+```
+Запустите: 
+```bash
 docker compose up --build
 ```
 
@@ -39,6 +47,7 @@ docker compose up --build
 - Документация API: http://localhost:8000/docs
 
 ## Тесты
+Запуск тестирования
 
 ```bash
 docker compose exec app pytest tests/ -v
@@ -65,14 +74,6 @@ tests/test_services.py::test_pagination_works PASSED                     [100%]
 
 3 теста — эндпоинты (главная страница, случайный пользователь, 404)
 
-## Переменные окружения
-
-Создайте файл `.env`:
-
-```
-API_BASE_URL=https://api.randomdatatools.ru
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/random_users
-```
 
 ## API Эндпоинты
 
@@ -90,7 +91,6 @@ DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/random_users
 ```
 random_users_app/
 ├── app/
-│ ├── init.py
 │ ├── main.py # FastAPI приложение, эндпоинты
 │ ├── database.py # Подключение к PostgreSQL
 │ ├── models.py # SQLAlchemy модель User
