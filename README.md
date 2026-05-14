@@ -101,7 +101,6 @@ random_users_app/
 │ ├── index.html
 │ └── user_detail.html
 ├── tests/
-│ ├── init.py
 │ ├── conftest.py # Фикстуры 
 │ ├── test_api_client.py # Тесты клиента API 
 │ ├── test_services.py # Тесты сервисов 
