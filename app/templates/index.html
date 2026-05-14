@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Users</title>
+    <style>
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .pagination a, .pagination span {
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            text-decoration: none;
+            color: #333;
+        }
+        .pagination .current {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .pagination a:hover {
+            background: #f0f0f0;
+        }
+        .progress-container {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f8f9fa;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .loading-text {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Users ({{ total }} total)</h1>
+    
+    <div>
+        <form id="loadForm" style="display: inline;">
+            <input type="number" id="count" value="100">
+            <button type="button" onclick="loadUsers()">Load from API</button>
+        </form>
+        <a href="/random"><button type="button">Random user</button></a>
+    </div>
+    
+    <div id="progressContainer" class="progress-container">
+        <div class="loading-text" id="progressText">Loading users...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+    
+    <div id="msg"></div>
+    <hr>
+    
+    <table border="1">
+        <thead>
+            <tr><th>ID</th><th>Gender</th><th>First Name</th><th>Last Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Link</th></tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.gender or '-' }}</td>
+                <td>{{ u.first_name or '-' }}</td>
+                <td>{{ u.last_name or '-' }}</td>
+                <td>{{ u.phone or '-' }}</td>
+                <td>{{ u.email or '-' }}</td>
+                <td>{{ u.city or '' }}, {{ u.street or '' }} {{ u.building or '' }}</td>
+                <td><a href="/user/{{ u.id }}">Open</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Пагинация -->
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="/?page=1">⏮ First</a>
+            <a href="/?page={{ page - 1 }}">◀ Previous</a>
+        {% else %}
+            <span class="disabled">⏮ First</span>
+            <span class="disabled">◀ Previous</span>
+        {% endif %}
+        
+        <span class="current">Page {{ page }} of {{ total_pages }}</span>
+        
+        {% if page < total_pages %}
+            <a href="/?page={{ page + 1 }}">Next ▶</a>
+            <a href="/?page={{ total_pages }}">Last ⏭</a>
+        {% else %}
+            <span class="disabled">Next ▶</span>
+            <span class="disabled">Last ⏭</span>
+        {% endif %}
+    </div>
+    
+    <script>
+    async function loadUsers() {
+        let count = document.getElementById('count').value;
+        let msgDiv = document.getElementById('msg');
+        let progressContainer = document.getElementById('progressContainer');
+        let progressText = document.getElementById('progressText');
+        let progressFill = document.getElementById('progressFill');
+        
+        // Показываем прогресс
+        progressContainer.style.display = 'block';
+        progressText.innerHTML = '⏳ Загрузка ' + count + ' пользователей...';
+        progressFill.style.width = '0%';
+        msgDiv.innerHTML = '';
+        
+        let requestedCount = parseInt(count);
+        let batchSize = 100;
+        let batches = Math.ceil(requestedCount / batchSize);
+        let totalAdded = 0;
+        
+        for (let i = 0; i < batches; i++) {
+            let currentBatch = Math.min(batchSize, requestedCount - i * batchSize);
+            
+            // Обновляем прогресс
+            let percent = (i / batches) * 100;
+            progressFill.style.width = percent + '%';
+            progressText.innerHTML = `📡 Загрузка: запрос ${i + 1} из ${batches} (${currentBatch} пользователей)...`;
+            
+            try {
+                let resp = await fetch('/load', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({count: currentBatch})
+                });
+                let data = await resp.json();
+                if (resp.ok) {
+                    totalAdded += data.added;
+                } else {
+                    throw new Error(data.detail || 'Unknown error');
+                }
+            } catch (err) {
+                progressText.innerHTML = '❌ Ошибка: ' + err.message;
+                progressFill.style.width = '100%';
+                progressFill.style.background = '#dc3545';
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 2000);
+                return;
+            }
+            
+            // Пауза между запросами
+            if (i < batches - 1) {
+                await new Promise(r => setTimeout(r, 1100));
+            }
+        }
+        
+        // Завершено
+        progressFill.style.width = '100%';
+        progressText.innerHTML = '✅ Загружено ' + totalAdded + ' пользователей! Обновление страницы...';
+        progressFill.style.background = '#28a745';
+        
+        setTimeout(() => {
+            location.reload();
+        }, 1500);
+    }
+    </script>
+</body>
+</html>
