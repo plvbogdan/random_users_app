@@ -84,9 +84,10 @@ async def load_users(load_request: LoadRequest, db: AsyncSession = Depends(get_d
 async def user_detail(request: Request, user_id: int, db: AsyncSession = Depends(get_db)):
     user = await get_user_by_id(db, user_id)
     if not user:
-        return HTMLResponse("<h1>404 Not found</h1><a href='/'>Home</a>", status_code=404)
+        return templates.TemplateResponse(request, "404.html", {
+            "message": f"User with id {user_id} not found"
+        }, status_code=404)
     
-    # НОВЫЙ СИНТАКСИС
     return templates.TemplateResponse(request, "user_detail.html", {
         "user": user
     })
@@ -95,9 +96,10 @@ async def user_detail(request: Request, user_id: int, db: AsyncSession = Depends
 async def random_user(request: Request, db: AsyncSession = Depends(get_db)):
     user = await get_random_user(db)
     if not user:
-        return HTMLResponse("<h1>No users</h1><a href='/'>Home</a>", status_code=404)
+        return templates.TemplateResponse(request, "404.html", {
+            "message": "No users in database"
+        }, status_code=404)
     
-    # НОВЫЙ СИНТАКСИС
     return templates.TemplateResponse(request, "user_detail.html", {
         "user": user
     })
